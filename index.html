@@ -1,0 +1,122 @@
+<style>
+html, body {
+    height: 100px;
+}
+body {
+    margin: 0;
+}
+.world {
+    position: fixed;
+    top: 50px;
+    bottom: 50px;
+    left: 50px;
+    right: 50px;
+    overflow: hidden;
+}
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: -webkit-linear-gradient(-105deg, #c1346d, #59192e);
+}
+#ground {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    flex-direction: row;
+    align-content: flex-end;
+}
+.stair {
+    background: #fff;
+    width: 40px;
+}
+</style>
+<div id="world" class=world>
+    <div class=background></div>
+    <div id="ground" class=ground></div>
+</div>
+<script>
+var game = {};
+
+game.bump = [30, 60, 90, 120, 150, 180, 210, 235, 250, 250, 250, 250, 250, 235, 210, 180, 150, 120, 90, 60, 30];
+game.hill = [30, 60, 90, 120, 150, 180, 210, 235, 250, 260, 270, 285, 290, 294, 297, 300, 300, 300, 300, 300, 297, 294, 290, 285, 270, 260, 250, 235, 210, 180, 150, 120, 90, 60, 30];
+game.shortFlat = ['loop', 40, 30];
+game.longFlat = ['loop', 120, 30];
+
+game.map = [
+    game.shortFlat,
+    game.hill,
+    game.shortFlat,
+    game.bump,
+    game.shortFlat,
+    game.bump,
+    game.longFlat,
+    game.hill,
+    game.longFlat,
+    game.hill,
+    game.longFlat,
+    game.hill
+];
+
+game.currentMapIndex = 0;
+game.currentMapPiece = 0;
+game.loopsLeft = 0;
+
+game.addGroundPiece = function(height) {
+    groundPiece = document.createElement('div');
+    groundPiece.setAttribute('style', 'height: ' + height + 'px');
+    groundPiece.setAttribute('class', 'stair');
+    ground.appendChild(groundPiece);
+};
+
+game.stairWidth = (function(){
+    game.addGroundPiece(0);
+    var width = ground.firstElementChild.clientWidth;
+    ground.removeChild(ground.firstElementChild);
+    return width;
+})();
+
+game.step = function() {
+    if (game.currentMapIndex > game.map.length - 1) {
+        return;
+    }
+
+    var mapPieces = game.map[game.currentMapIndex];
+
+    if (game.currentMapPiece > mapPieces.length - 1) {
+        if (mapPieces[0] === 'loop' && game.loopsLeft > 1) {
+            game.currentMapPiece = 2;
+            game.loopsLeft -= 1;
+        } else {
+            game.currentMapPiece = 0;
+            game.currentMapIndex += 1;
+            return game.step();
+        }
+    }
+
+    if (game.currentMapPiece === 0 && mapPieces[0] === 'loop') {
+        game.loopsLeft = mapPieces[1];
+        game.currentMapPiece = 2;
+    }
+
+    game.addGroundPiece(mapPieces[game.currentMapPiece]);
+
+    if (ground.childElementCount > Math.ceil(world.clientWidth / game.stairWidth)) {
+        ground.removeChild(ground.firstElementChild);
+    }
+
+    game.currentMapPiece += 1;
+
+    window.game.timeout = setTimeout(function(){
+        game.step();
+    }, 30);
+};
+
+game.step();
+</script>
